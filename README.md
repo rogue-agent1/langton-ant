@@ -1,6 +1,6 @@
 # langton-ant
 
-Langton's Ant simulation.""".
+Langton's Ant cellular automaton.
 
 Zero dependencies. Python 3.8+.
 
