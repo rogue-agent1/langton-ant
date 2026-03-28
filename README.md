@@ -1,7 +1,11 @@
 # langton-ant
-Langton's Ant cellular automaton simulation. Zero dependencies.
+
+Langton's Ant simulation.""".
+
+Zero dependencies. Python 3.8+.
+
 ## Usage
-```
-python3 langton_ant.py 11000
-python3 langton_ant.py 5000 --animate
+
+```bash
+python3 langton_ant.py --help
 ```
