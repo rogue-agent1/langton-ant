@@ -1,6 +1,6 @@
 # langton-ant
 
-Langton's Ant cellular automaton
+Langton's Ant Simulation. Zero-dependency, single-file Python CLI.
 
 ## Usage
 
@@ -8,7 +8,6 @@ Langton's Ant cellular automaton
 python3 langton_ant.py --help
 ```
 
-## Features
+## License
 
-- Zero dependencies (Python 3.8+)
-- Single file implementation
+MIT

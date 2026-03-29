@@ -1,41 +1,35 @@
 #!/usr/bin/env python3
-"""langton_ant - Langton's Ant simulation."""
-import sys, argparse, json
+"""Langton's Ant - Simple cellular automaton producing complex behavior."""
+import sys
 
-def simulate(width, height, steps):
+def simulate(width=80, height=40, steps=11000):
     grid = [[0]*width for _ in range(height)]
-    x, y = width//2, height//2
-    dx, dy = 0, -1
-    history = []
+    x, y, d = width//2, height//2, 0  # 0=up,1=right,2=down,3=left
+    dx = [0, 1, 0, -1]; dy = [-1, 0, 1, 0]
     for step in range(steps):
         if grid[y][x] == 0:
-            dx, dy = -dy, dx
-            grid[y][x] = 1
+            d = (d + 1) % 4; grid[y][x] = 1
         else:
-            dx, dy = dy, -dx
-            grid[y][x] = 0
-        x = (x + dx) % width
-        y = (y + dy) % height
-    black = sum(sum(row) for row in grid)
-    return grid, black
+            d = (d - 1) % 4; grid[y][x] = 0
+        x = (x + dx[d]) % width; y = (y + dy[d]) % height
+    return grid, x, y, step + 1
 
 def render(grid):
-    return "
-".join("".join("█" if c else " " for c in row) for row in grid)
+    return "\n".join("".join("█" if c else "·" for c in row) for row in grid)
+
+def stats(grid):
+    total = sum(sum(row) for row in grid)
+    return {"black_cells": total, "total": len(grid)*len(grid[0]), "density": f"{total/(len(grid)*len(grid[0]))*100:.1f}%"}
 
 def main():
-    p = argparse.ArgumentParser(description="Langton's Ant")
-    p.add_argument("--width", type=int, default=60)
-    p.add_argument("--height", type=int, default=30)
-    p.add_argument("--steps", type=int, default=10000)
-    p.add_argument("--json", action="store_true")
-    args = p.parse_args()
-    grid, black = simulate(args.width, args.height, args.steps)
-    if args.json:
-        print(json.dumps({"width": args.width, "height": args.height, "steps": args.steps, "black_cells": black, "total_cells": args.width*args.height, "fill_pct": round(black/(args.width*args.height)*100, 1)}))
-    else:
-        print(render(grid))
-        print(f"
-{args.steps} steps, {black} black cells")
+    steps = int(sys.argv[1]) if len(sys.argv) > 1 else 11000
+    w = int(sys.argv[2]) if len(sys.argv) > 2 else 70
+    h = int(sys.argv[3]) if len(sys.argv) > 3 else 35
+    grid, fx, fy, actual = simulate(w, h, steps)
+    s = stats(grid)
+    print(f"=== Langton's Ant ({actual} steps) ===")
+    print(f"Ant at ({fx},{fy}), {s['black_cells']} black cells ({s['density']})\n")
+    print(render(grid))
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    main()
