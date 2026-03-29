@@ -1,30 +1,41 @@
 #!/usr/bin/env python3
 """langton_ant - Langton's Ant simulation."""
-import argparse
+import sys, argparse, json
 
-def simulate(w, h, steps):
-    grid = [[0]*w for _ in range(h)]
-    x, y, d = w//2, h//2, 0  # 0=up,1=right,2=down,3=left
-    dx = [0, 1, 0, -1]; dy = [-1, 0, 1, 0]
+def simulate(width, height, steps):
+    grid = [[0]*width for _ in range(height)]
+    x, y = width//2, height//2
+    dx, dy = 0, -1
+    history = []
     for step in range(steps):
         if grid[y][x] == 0:
-            d = (d + 1) % 4; grid[y][x] = 1
+            dx, dy = -dy, dx
+            grid[y][x] = 1
         else:
-            d = (d - 1) % 4; grid[y][x] = 0
-        x = (x + dx[d]) % w; y = (y + dy[d]) % h
-    return grid, x, y
+            dx, dy = dy, -dx
+            grid[y][x] = 0
+        x = (x + dx) % width
+        y = (y + dy) % height
+    black = sum(sum(row) for row in grid)
+    return grid, black
+
+def render(grid):
+    return "
+".join("".join("█" if c else " " for c in row) for row in grid)
 
 def main():
     p = argparse.ArgumentParser(description="Langton's Ant")
-    p.add_argument("-W", "--width", type=int, default=80)
-    p.add_argument("-H", "--height", type=int, default=40)
-    p.add_argument("-s", "--steps", type=int, default=11000)
+    p.add_argument("--width", type=int, default=60)
+    p.add_argument("--height", type=int, default=30)
+    p.add_argument("--steps", type=int, default=10000)
+    p.add_argument("--json", action="store_true")
     args = p.parse_args()
-    grid, ax, ay = simulate(args.width, args.height, args.steps)
-    black = sum(sum(row) for row in grid)
-    for y in range(args.height):
-        print("".join("█" if grid[y][x] else " " for x in range(args.width)))
-    print(f"\n{args.steps} steps, {black} black cells, ant at ({ax},{ay})")
+    grid, black = simulate(args.width, args.height, args.steps)
+    if args.json:
+        print(json.dumps({"width": args.width, "height": args.height, "steps": args.steps, "black_cells": black, "total_cells": args.width*args.height, "fill_pct": round(black/(args.width*args.height)*100, 1)}))
+    else:
+        print(render(grid))
+        print(f"
+{args.steps} steps, {black} black cells")
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__": main()
