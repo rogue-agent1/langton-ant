@@ -1,35 +1,47 @@
 #!/usr/bin/env python3
-"""Langton's Ant - Simple cellular automaton producing complex behavior."""
+"""langton_ant - Langton's Ant cellular automaton."""
 import sys
 
-def simulate(width=80, height=40, steps=11000):
-    grid = [[0]*width for _ in range(height)]
-    x, y, d = width//2, height//2, 0  # 0=up,1=right,2=down,3=left
-    dx = [0, 1, 0, -1]; dy = [-1, 0, 1, 0]
-    for step in range(steps):
-        if grid[y][x] == 0:
-            d = (d + 1) % 4; grid[y][x] = 1
-        else:
-            d = (d - 1) % 4; grid[y][x] = 0
-        x = (x + dx[d]) % width; y = (y + dy[d]) % height
-    return grid, x, y, step + 1
+DIRS = [(0, -1), (1, 0), (0, 1), (-1, 0)]  # N, E, S, W
 
-def render(grid):
-    return "\n".join("".join("█" if c else "·" for c in row) for row in grid)
+def simulate(steps, rule="RL"):
+    grid = {}
+    x, y, d = 0, 0, 0  # start at origin facing North
+    path = [(x, y)]
+    for _ in range(steps):
+        color = grid.get((x, y), 0)
+        turn = rule[color % len(rule)]
+        if turn == "R":
+            d = (d + 1) % 4
+        elif turn == "L":
+            d = (d - 1) % 4
+        grid[(x, y)] = (color + 1) % len(rule)
+        x += DIRS[d][0]
+        y += DIRS[d][1]
+        path.append((x, y))
+    return grid, path
 
-def stats(grid):
-    total = sum(sum(row) for row in grid)
-    return {"black_cells": total, "total": len(grid)*len(grid[0]), "density": f"{total/(len(grid)*len(grid[0]))*100:.1f}%"}
+def bounds(grid):
+    if not grid:
+        return 0, 0, 0, 0
+    xs = [x for x, y in grid]
+    ys = [y for x, y in grid]
+    return min(xs), min(ys), max(xs), max(ys)
 
-def main():
-    steps = int(sys.argv[1]) if len(sys.argv) > 1 else 11000
-    w = int(sys.argv[2]) if len(sys.argv) > 2 else 70
-    h = int(sys.argv[3]) if len(sys.argv) > 3 else 35
-    grid, fx, fy, actual = simulate(w, h, steps)
-    s = stats(grid)
-    print(f"=== Langton's Ant ({actual} steps) ===")
-    print(f"Ant at ({fx},{fy}), {s['black_cells']} black cells ({s['density']})\n")
-    print(render(grid))
+def test():
+    grid, path = simulate(100)
+    assert len(path) == 101
+    assert len(grid) > 0
+    # after 10000 steps, Langton's ant creates a highway
+    grid2, path2 = simulate(11000)
+    assert len(path2) == 11001
+    # multi-color rule
+    grid3, path3 = simulate(100, "RLR")
+    assert len(path3) == 101
+    print("OK: langton_ant")
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "test":
+        test()
+    else:
+        print("Usage: langton_ant.py test")
